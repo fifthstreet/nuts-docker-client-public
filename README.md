@@ -31,8 +31,8 @@ NUT already ships its own client (`upsmon`) and it is a fine choice. This projec
 ## Quick start
 
 ```bash
-git clone https://github.com/OWNER/nuts-docker-client.git
-cd nuts-docker-client
+git clone https://github.com/fifthstreet/nuts-docker-client-public.git
+cd nuts-docker-client-public
 cp .env.example .env
 ```
 
@@ -67,7 +67,7 @@ If the NUT server is simply unreachable while mains power is fine, you only get 
 ## Update
 
 ```bash
-cd nuts-docker-client
+cd nuts-docker-client-public
 git pull
 docker compose up -d --build
 ```
