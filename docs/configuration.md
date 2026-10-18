@@ -36,6 +36,8 @@ An empty value in `.env` means "use the default".
 
 ## The dashboard
 
+<p align="center"><img src="images/settings.png" alt="The Settings panel" width="560"></p>
+
 The Settings panel has the same options (secrets such as the Pushover keys and the MQTT password are write-only: leave blank to keep the current value, a single `-` clears it) plus buttons to **Test NUT connection**, **Test MQTT connection** and **Send test notification** (labelled `[TEST - IGNORE]`).
 
 Also on the dashboard: the live cards, a list of warnings, and the event log (also kept in `/data/events.jsonl`). The same data is available as JSON at `/api/status` and `/api/events`.

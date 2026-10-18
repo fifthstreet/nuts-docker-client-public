@@ -11,6 +11,11 @@
 
 NUT already ships its own client (`upsmon`) and it is a fine choice. This project is for people who would rather run the client in Docker, with a dashboard, a switch that defaults to "do nothing", and Home Assistant support.
 
+<p align="center"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/dashboard-dark.png">
+  <img src="docs/images/dashboard.png" alt="The dashboard: shutdown switch OFF, UPS on mains power, live battery readings and the event log" width="640">
+</picture></p>
+
 ```
  NUT server --(TCP 3493)--> nuts-client ----writes a request file----> nuts-helper
  (owns the UPS)            dashboard :8099                            (privileged, no network)
@@ -61,6 +66,13 @@ While the switch is ON, the host is powered off when any of these is true:
 | UPS reports low battery | always |
 | NUT server orders a shutdown | always |
 | NUT server stops answering **while on battery** | after 3 failed polls |
+
+This is the dashboard during a power cut with the switch ON: the countdown is running.
+
+<p align="center"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/on-battery-dark.png">
+  <img src="docs/images/on-battery.png" alt="The dashboard on battery power with the switch ON and a shutdown countdown" width="640">
+</picture></p>
 
 If the NUT server is simply unreachable while mains power is fine, you only get a notification. The two time limits are settings. A shutdown request is sent once per outage.
 
