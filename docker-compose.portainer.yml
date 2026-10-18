@@ -1,0 +1,69 @@
+# PORTAINER VERSION of docker-compose.yml: identical except the two build lines are removed (Portainer cannot build from the web editor).
+# Build the image once on the Docker host first (see docs/portainer.md), then paste this file as a stack.
+# Everything runs in Docker; nothing is installed on the host. Needs a Linux host with systemd.
+# Settings come from ${VARIABLES} (a .env file next to this file, or a Portainer stack's environment variables); all are optional.
+# Once the app is running, anything saved on its dashboard overrides these first-start defaults.
+services:
+  nuts-client:                      # unprivileged: UPS watcher + dashboard + Home Assistant link
+    image: nuts-docker-client:0.7.0
+    container_name: nuts-client
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      TZ: ${TZ:-UTC}
+      NUT_HOST: ${NUT_HOST:-}
+      NUT_PORT: ${NUT_PORT:-}
+      NUT_UPS: ${NUT_UPS:-}
+      NUTS_HOST_LABEL: ${NUTS_HOST_LABEL:-}
+      PUSHOVER_TOKEN: ${PUSHOVER_TOKEN:-}
+      PUSHOVER_USER: ${PUSHOVER_USER:-}
+      NUTS_ACTIVE: ${NUTS_ACTIVE:-off}
+      NUTS_REPORT: ${NUTS_REPORT:-}
+      NUTS_ON_BATTERY_SECONDS: ${NUTS_ON_BATTERY_SECONDS:-}
+      NUTS_MIN_RUNTIME_SECONDS: ${NUTS_MIN_RUNTIME_SECONDS:-}
+      NUTS_POLL_SECONDS: ${NUTS_POLL_SECONDS:-}
+      NUTS_COMM_FAIL_LIMIT: ${NUTS_COMM_FAIL_LIMIT:-}
+      NUTS_HEARTBEAT_SECONDS: ${NUTS_HEARTBEAT_SECONDS:-}
+      NUTS_STARTUP_NOTICE: ${NUTS_STARTUP_NOTICE:-}
+      NUTS_DASH_ALLOW: ${NUTS_DASH_ALLOW:-}
+      NUTS_MQTT_HOST: ${NUTS_MQTT_HOST:-}
+      NUTS_MQTT_PORT: ${NUTS_MQTT_PORT:-}
+      NUTS_MQTT_USER: ${NUTS_MQTT_USER:-}
+      NUTS_MQTT_PASSWORD: ${NUTS_MQTT_PASSWORD:-}
+      NUTS_HA_UPS: ${NUTS_HA_UPS:-}              # Home Assistant: publish the UPS readings (yes on ONE server only)
+      NUTS_HA_HOST: ${NUTS_HA_HOST:-}            # Home Assistant: publish this server's own entities
+      NUTS_DASH_URL: ${NUTS_DASH_URL:-}          # this dashboard's address, linked from the Home Assistant device page
+    ports:
+      - "${NUTS_DASH_PUBLISH_PORT:-8099}:8099"   # the dashboard; set NUTS_DASH_PUBLISH_PORT if 8099 is taken on this host
+    volumes:
+      - nuts-data:/data             # event log, saved settings (incl. the ON/OFF switch), on-battery timer
+      - nuts-box:/box               # the drop-box shared with the helper (request file in, heartbeat out)
+      - /etc/hostname:/host-hostname:ro   # this server's own name = the default label, so the SAME file works on every server
+
+  nuts-helper:                      # the ONLY privileged part: no network, no ports, no settings; powers the host off on a request
+    image: nuts-docker-client:0.7.0
+    container_name: nuts-helper
+    command: ["helper"]
+    restart: unless-stopped
+    user: "0:0"
+    privileged: true                # needed to enter the host's namespaces (nsenter) and run systemctl poweroff
+    pid: host
+    network_mode: none
+    read_only: true
+    environment:
+      TZ: ${TZ:-UTC}
+      NUTS_HELPER_DRYRUN: ${NUTS_HELPER_DRYRUN:-no}     # yes = log what it would do but never power off (for testing)
+    volumes:
+      - nuts-box:/box
+    healthcheck:
+      test: ["CMD", "python", "/app/nuts_client.py", "helper-health"]
+      interval: 30s
+      timeout: 5s
+      retries: 2
+      start_period: 15s
+
+volumes:
+  nuts-data:
+  nuts-box:
